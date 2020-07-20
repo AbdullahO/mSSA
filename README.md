@@ -50,6 +50,6 @@ df = model.predict('ts_7', 100001,100100)
 will forecast the entrie between 100001 to 100100.
 
 ## Example
-We provide a running example for both synthetic and real world dataset in the python notebook in the mSSA/examples  [folder]().
+We provide a running example for both synthetic and real world dataset in the python notebook in the mSSA/examples  [folder](/mssa/examples/mSSA_notebook_example.ipynb).
 ## License 
 This work is licensed under the Apache 2.0 License. 
