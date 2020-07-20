@@ -20,8 +20,9 @@ This work has the following dependencies:
 
 To install the mSSA package form the source, simply clone this repository and then install the package using pip as follows:
 
-`pip3 install .`
- 
+```
+pip3 install .
+``` 
 
 ## Getting Started
 To get started, first load the time series example we have provided in `../mSSA/examples/testdata/tables/mixturets_var.csv` using pandas.
