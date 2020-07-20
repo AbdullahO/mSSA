@@ -11,12 +11,13 @@ Specifically, mSSA allows you to predict entries that are:
 This is the official implementation of our  [paper](https://arxiv.org/abs/2006.13448). refer to the paper for  more information about the theory and the algorithm of mSSA.  
 
 
+
+## Installation
 This work has the following dependencies:
 
 - Python 3.5+ with the libraries: (numpy, pandas, scipy, sklearn)
  
 
-## Installation
 To install the mSSA package form the source, simply clone this repository and then install the package using pip as follows:
 
 `pip3 install .`
