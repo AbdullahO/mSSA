@@ -8,7 +8,7 @@ Specifically, mSSA allows you to predict entries that are:
 2- Missing/corrupted by noise (i.e. imputation)
 
 
-This is the official implementation of our  [paper](https://arxiv.org/abs/2006.13448). refer to the paper for  more information about the theory and the algorithm of mSSA.  
+This repository is the implementation of our [paper](https://arxiv.org/abs/2006.13448). Refer to the paper for  more information about the theory and the algorithm of mSSA.  
 
 
 
@@ -51,6 +51,6 @@ df = model.predict('ts_7', 100001,100100)
 will forecast the entrie between 100001 to 100100.
 
 ## Example
-We provide a running example for both synthetic and real world dataset in a python notebook in the mssa/examples folder. [Here](/mssa/examples/mSSA_notebook_example.ipynb).
+We provide a running example for both synthetic and real-world datasets in a python notebook in the mssa/examples folder. [Here](/mssa/examples/mSSA_notebook_example.ipynb).
 ## License 
 This work is licensed under the Apache 2.0 License. 
