@@ -41,12 +41,12 @@ model.update_model(df.loc[:,['ts']])
 Then you can impute or forecast any entry using the predict function. For example:
 
 ```python
-df = model.predict('ts',1000)
+prediction = model.predict('ts',1000)
 ```
 
 will impute the 1000th entry, while 
 ```python
-df = model.predict('ts', 100001,100100)
+prediction = model.predict('ts', 100001,100100)
 ```
 
 will forecast the entrie between 100001 to 100100.
