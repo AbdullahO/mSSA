@@ -29,7 +29,7 @@ To get started, first load the time series example we have provided in `../mSSA/
 
 ```python
 import pandas as pd
-df = pd.read_csv("mSSA/examples/testdata/tables/mixturets_var.csv")
+df = pd.read_csv("mssa/examples/testdata/tables/mixturets_var.csv")
 ```
 Then initialise and fit your  mSSA model on the time series named `ts` as follows:
  
