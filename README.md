@@ -36,7 +36,7 @@ Then initialise and fit your  mSSA model on the time series named `ts` as follow
 ```python
 from mssa.mssa import mSSA
 model = mSSA()
-model.update(df.loc[:,['ts']]) 
+model.update_model(df.loc[:,['ts']]) 
 ```
 Then you can impute or forecast any entry using the predict function. For example:
 
