@@ -49,7 +49,7 @@ will impute the 1000th entry, while
 prediction = model.predict('ts', 100001,100100)
 ```
 
-will forecast the entrie between 100001 to 100100.
+will forecast the entries between 100001 to 100100.
 
 ## Example
 We provide a running example for both synthetic and real-world datasets in a python notebook in the mssa/examples folder. [Here](/mssa/examples/mSSA_notebook_example.ipynb).
