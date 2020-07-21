@@ -31,22 +31,22 @@ To get started, first load the time series example we have provided in `../mSSA/
 import pandas as pd
 df = pd.read_csv("mSSA/examples/testdata/tables/mixturets_var.csv")
 ```
-Then initialise and fit your  mSSA model on the time series named `ts_7` as follows:
+Then initialise and fit your  mSSA model on the time series named `ts` as follows:
  
 ```python
 from mssa.mssa import mSSA
 model = mSSA()
-model.update(df.loc[:,['ts_7']]) 
+model.update(df.loc[:,['ts']]) 
 ```
 Then you can impute or forecast any entry using the predict function. For example:
 
 ```python
-df = model.predict('ts_7',1000)
+df = model.predict('ts',1000)
 ```
 
 will impute the 1000th entry, while 
 ```python
-df = model.predict('ts_7', 100001,100100)
+df = model.predict('ts', 100001,100100)
 ```
 
 will forecast the entrie between 100001 to 100100.
