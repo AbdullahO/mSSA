@@ -68,9 +68,9 @@ Name | Type| Description
 `num_models` | (int, or valid timestamp) |  If `self.segment`==`True`, several submodels are built, This argument determeines how many of these sub-models will be used to make a forecast. Specicifcally, the last `num_models`  submodels are used. (Optional, Default = 10)
 `confidence_interval` | bool |  If true, return the (confidence%) confidence interval along with the prediction (Optional, Default = True)
 `confidence` | float, (0,100) | he confidence used to produce the upper and lower bounds. (Default : 95)
-use_imputed| bool|  If true, use denoised (imputed) observations to forecast  (Optional, Default = False)
-return_variance| bool | If true, return mean and variance  (Optional, Default = False, overrides confidence_interval)
-uq_method| string| Specify which model is used to get the lower and upper bound. Choose from  {"Gaussian" ,"Chebyshev"}. Default "Gaussian".
+`use_imputed`| bool|  If true, use denoised (imputed) observations to forecast  (Optional, Default = False)
+`return_variance`| bool | If true, return mean and variance  (Optional, Default = False, overrides confidence_interval)
+`uq_method`| string| Specify which model is used to get the lower and upper bound. Choose from  {"Gaussian" ,"Chebyshev"}. Default "Gaussian".
         
 
 ##### Returns
