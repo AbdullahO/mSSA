@@ -38,16 +38,15 @@ Name | Type| Description
 `normalize`| boolean | Normalize the multiple time series before fitting the model. (Default: True).
 `fill_in_missing` | boolean | if true, missing values will be filled by carrying the last observations forward, and then carrying the latest observation backward. If false, they will be filled with zeros. (Default:False)
 
-
+---
 
  
 ### Methods
-
+----
 #### `update_model(df)`
 
 This function takes a new set of entries in a dataframe and update the model accordingly. Note that this function is ude for the initial fit as well as updating the model. If `self.segment` is set to True, the new entries might build several sub-models  depending on the parameters `T` and `gamma`.    
 
-:param df: dataframe of new entries to be included in the new model
 
 Name | Type| Description
 :------------ | :-------------|:------------- 
@@ -55,7 +54,7 @@ Name | Type| Description
 
 
 
-
+----
 
 #### `predict(col_name, t1, t2=None, num_models=10, confidence_interval=True, use_imputed=False,
                 return_variance=False, confidence=95, uq_method='Gaussian')`
