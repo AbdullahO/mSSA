@@ -6,7 +6,7 @@
 class mssa.mSSA(rank=None, rank_var=None,segment=False, T=int(2.5e7), T_var=None, gamma=0.2, T0=10, col_to_row_ratio=5,
                  agg_interval=None, agg_method='average', uncertainty_quantification=True, p=None, direct_var=True, L=None,
                  persist_L=None, normalize=True, fill_in_missing=False  )
-                 ```
+```
 
 Multivariate Singular Spectrum (mSSA) is an algorithm for multivariate time series forecasting and imputation. Specifically, mSSA allows you to predict entries that are:
 
