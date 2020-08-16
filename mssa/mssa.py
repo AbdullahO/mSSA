@@ -22,7 +22,7 @@ class mSSA(object):
     :param rank: (int) the number of singular values to retain in the means prediction model
     :param rank_var: (int) the number of singular values to retain in the variance prediction model
     :param gamma: (float) (0,1) fraction of T after which the last sub-model is fully updated
-    :param segment: If True, several sub-models will be built, each with a moving windows of length T.
+    :param segment: (bool) If True, several sub-models will be built, each with a moving windows of length T.
     :param T: (int) Number of entries in each submodel in the means prediction model
     :param T0: (int) Minimum number of observations to fit a model. (Default 100)
     :param col_to_row_ratio: (int) the ratio of no. columns to the number of rows in each sub-model
@@ -30,17 +30,17 @@ class mSSA(object):
      or units (if index is integers). Default is None, where the interval will be determined by the median difference
      between timestamps.
     :param agg_method: Choose one of {'max', 'min', 'average'}.
-    :param uncertainty_quantification: (bol) if true, estimate the time-varying variance.
+    :param uncertainty_quantification: (bool) if true, estimate the time-varying variance.
     :param p: (float) (0,1) select the probability of observation. If None, it will be computed from the observations.
-    :param direct_var: (bol) if True, calculate variance by subtracting the mean from the observations in the variance
+    :param direct_var: (bool) if True, calculate variance by subtracting the mean from the observations in the variance
     prediction model (recommended), otherwise, the variance model will be built on the squared observations
     :param L:  (int) the number of rows in each sub-model. if set, col_to_row_ratio is ignored.
-    :param normalize: (bol) Normalize the multiple time series before fitting the model.
+    :param normalize: (bool) Normalize the multiple time series before fitting the model.
     :param fill_in_missing: if true, missing values will be filled by carrying the last observations forward, and then
      carrying the latest observation backward.
     '''
 
-    def __init__(self, rank=None, rank_var=1, T=int(2.5e7), T_var=None, gamma=0.2, T0=10, col_to_row_ratio=2,
+    def __init__(self, rank=None, rank_var=1, T=int(2.5e7), T_var=None, gamma=0.2, T0=10, col_to_row_ratio=5,
                  agg_method='average', uncertainty_quantification=True, p=None, direct_var=True, L=None,
                  persist_L=None, normalize=True, fill_in_missing=False, segment=False, agg_interval=None):
 
@@ -237,10 +237,10 @@ class mSSA(object):
         :param t1: (int, or valid timestamp) The initial timestamp to be predicted
         :param t2: (int, or valid timestamp) The last timestamp to be predicted, (Optional, Default = t1)
         :param num_models: (int, >0) Number of submodels used to create a forecast (Optional, Default = 10)
-        :param confidence_interval: (bol)  If true, return the (confidence%) confidence interval along with the prediction (Optional, Default = True)
+        :param confidence_interval: (bool)  If true, return the (confidence%) confidence interval along with the prediction (Optional, Default = True)
         :param confidence: (float, (0,100)) The confidence used to produce the upper and lower bounds
-        :param use_imputed: (bol)  If true, use imputed values to forecast  (Optional, Default = False)
-        :param return_variance: (bol)  If true, return mean and variance  (Optional, Default = False, overrides confidence_interval)
+        :param use_imputed: (bool)  If true, use imputed values to forecast  (Optional, Default = False)
+        :param return_variance: (bool)  If true, return mean and variance  (Optional, Default = False, overrides confidence_interval)
         :param uq_method: (string): Choose from  {"Gaussian" ,"Chebyshev"}
         :return:
             DataFrame with the timestamp and predictions
