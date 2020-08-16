@@ -56,15 +56,13 @@ Name | Type| Description
 
 ----
 
-#### `predict(col_name, t1, t2=None, num_models=10, confidence_interval=True, use_imputed=False,
-                return_variance=False, confidence=95, uq_method='Gaussian')`
+#### `predict(col_name, t1, t2=None, num_models=10, confidence_interval=True, use_imputed=False, return_variance=False, confidence=95, uq_method='Gaussian')`
 
 
 ##### Arguments
 Name | Type| Description
 :------------ | :-------------|:------------- 
 `col_name` |any valid pandas columns name {str, int} |  name of the column to be predicted. It must one of the columns in the original  DF used for training.
-
 `t1` | (int, or valid timestamp) |  The initial timestamp to be predicted.
 `t2` | (int, or valid timestamp) |  The last timestamp to be predicted, (Optional, Default = t1).
 `num_models` | (int, or valid timestamp) |  If `self.segment`==`True`, several submodels are built, This argument determeines how many of these sub-models will be used to make a forecast. Specicifcally, the last `num_models`  submodels are used. (Optional, Default = 10)
