@@ -3,9 +3,9 @@
 Multivariate Singular Spectrum (mSSA) is an algorithm for multivariate time series forecasting and imputation. 
 Specifically, mSSA allows you to predict entries that are:
 
-1- At a future time step (i.e. forecasting);
+1. At a future time step (i.e. forecasting);
 
-2- Missing/corrupted by noise (i.e. imputation)
+2. Missing/corrupted by noise (i.e. imputation)
 
 
 This repository is the implementation of the [paper: On Multivariate Singular Spectrum Analysis](https://arxiv.org/abs/2006.13448). Refer to the paper for  more information about the theory and the algorithm of mSSA.  
