@@ -51,6 +51,8 @@ prediction = model.predict('ts', 100001,100100)
 
 will forecast the entries between 100001 to 100100.
 
+Refer to the documentation of the mSSA class in [here](API.md). 
+
 ## Example
 We provide a running example for both synthetic and real-world datasets in a python notebook in the mssa/examples folder. [Here](/mssa/examples/mSSA_notebook_example.ipynb).
 ## License 
