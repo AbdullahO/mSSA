@@ -135,7 +135,7 @@ class mSSA(object):
         if isinstance(df.index[0], datetime):
             agg_op = df.groupby(pd.Grouper(freq='%sS' % self.agg_interval, sort=True, closed='right', label='right'))
         elif isinstance(df.index[0], (int, np.integer)):
-            agg_op = df.groupby(df.index // self.agg_interval)
+            agg_op = df.groupby((df.index // self.agg_interval).astype(int))
         else:
             raise ValueError('Dataframe index must be integers or timestamps')
 
@@ -189,10 +189,10 @@ class mSSA(object):
         df = self._aggregate_df(df)
 
         obs = (df.values).astype('float')
-        if obs.shape[0] < self.no_ts:
-            print("Dataframe does not have enough new unseen entries. (Number of new timestamps should be =>  "
-                  "(number of time series)")
-            return
+        # if obs.shape[0] < self.no_ts:
+        #     print("Dataframe does not have enough new unseen entries. (Number of new timestamps should be =>  "
+        #           "(number of time series)")
+            # return
 
         # lag is the the slack between the variance and timeseries model        
         lag = None
@@ -204,6 +204,7 @@ class mSSA(object):
                 lag = None
 
         # Update mean model
+        print(obs.shape)
         self.ts_model.update_model(obs)
         self.k = self.ts_model.kSingularValuesToKeep
         # Determine updated models
