@@ -121,8 +121,11 @@ class SVDModel(object):
         matrix = tsUtils.matrixFromSVD(self.skw, self.Ukw, self.Vkw, soft_threshold=soft_threshold, probability = self.p)
         newMatrixPInv = tsUtils.pInverseMatrixFromSVD(self.skw, self.Ukw, self.Vkw,soft_threshold=soft_threshold, probability = self.p)
         self.weights = np.dot(newMatrixPInv.T, self.lastRowObservations)
-        for i in range(self.no_ts):
-            self.forecast_model_score[i] = r2_score(self.lastRowObservations[i::self.no_ts]/self.p, np.dot(matrix[:,i::self.no_ts].T,self.weights))
+        
+        # only compute r2 score if there are enoguh samples
+        if len(self.lastRowObservations) >= 2*self.no_ts:
+            for i in range(self.no_ts):
+                self.forecast_model_score[i] = r2_score(self.lastRowObservations[i::self.no_ts]/self.p, np.dot(matrix[:,i::self.no_ts].T,self.weights))
 
     # return the imputed matrix
     def denoisedDF(self):

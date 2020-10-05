@@ -95,10 +95,11 @@ class mSSA(object):
         self.direct_var = direct_var
         self.fill_in_missing = fill_in_missing
         self.segment = segment
-        ############ Edit #############
-        # Probably this number is large enough, but might want to do it properly
-        ###############################
+        
 
+        ############ Edit #############
+        # Probably this number is large enough :), but might want to do it properly
+        ###############################
         if not self.segment:
             self.T = int(1e150)
             self.T_var = int(1e150)
@@ -204,7 +205,6 @@ class mSSA(object):
                 lag = None
 
         # Update mean model
-        print(obs.shape)
         self.ts_model.update_model(obs)
         self.k = self.ts_model.kSingularValuesToKeep
         # Determine updated models

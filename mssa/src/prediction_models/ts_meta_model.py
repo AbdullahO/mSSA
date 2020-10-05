@@ -119,7 +119,6 @@ class TSMM(object):
             if current_no_models > 0:
                 fillFactor = (self.TimeSeriesIndex % int(self.T /2))
                 FillElements = (int((self.T / 2 - fillFactor)) * (fillFactor > 0)) // self.no_ts
-                print('Fill', FillElements)
                 if FillElements > 0:
                     self.updateTS(NewEntries[:FillElements,:])
                     self.fitModels()
@@ -184,6 +183,8 @@ class TSMM(object):
         # Do not fit very few observations
         if self.TimeSeriesIndex < self.T0:
             return
+        if np.sqrt(self.TimeSeriesIndex/self.col_to_row_ratio) < 2:
+            return
         # Do not fit a lot of observations
         if lenEntriesSinceLastUpdate > self.T and ModelIndex != 0:
             print (self.TimeSeriesIndex, self.MUpdateIndex, [(m.N, m.M, m.start) for m in self.models.values()])
@@ -198,7 +199,7 @@ class TSMM(object):
             initEntries = self.TimeSeries[int(int(self.T / 2) - self.TimeSeriesIndex % (self.T / 2))//self.no_ts:,:]
             start = self.TimeSeriesIndex - self.TimeSeriesIndex % int(self.T / 2) - int(self.T / 2)
             # if ModelIndex != 0: assert len(initEntries) == self.T / 2
-            rect = 1
+            
             if lenEntriesSinceCons == self.T // 2:
                 initEntries = self.TimeSeries[:,:]
                 start = max(self.TimeSeriesIndex - self.T, 0)
@@ -218,6 +219,8 @@ class TSMM(object):
                 M -= M%self.no_ts
 
             M_ts = M//self.no_ts
+            if M_ts == 1:
+                N = initEntries.shape[0]
             inc_obs = initEntries[:M_ts*N,:]
             
             if self.normalize:
