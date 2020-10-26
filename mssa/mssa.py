@@ -286,37 +286,46 @@ class mSSA(object):
             # mean is imputed
             predictions = self._get_imputation_range_local(t1, t2, self.ts_model, ts_no)
             # variance 
-            if t2 < update_index_var:
+            if self.uq and t2 < update_index_var:
                 # impute variance
                 var = self._get_imputation_range_local(t1, t2, self.var_model, ts_no)
-            else:
+            elif self.uq:
                 # impute and forecast variance
                 var1 = self._get_imputation_range_local(t1, update_index_var, self.var_model, ts_no)
                 var2 = self._get_forecast_range_local(update_index_var, t2, self.var_model, ts_no,
                                                       use_imputed=use_imputed)
                 var = np.concatenate([var1, var2])
-
+            else: var = 0
+        
         elif t1 > update_index:
             # all variance and mean should be forecasted
             predictions = self._get_forecast_range_local(t1, t2, self.ts_model, ts_no, num_models)
-            var = self._get_forecast_range_local(t1, t2, self.var_model, ts_no, num_models, use_imputed=use_imputed)
+            if self.uq: var = self._get_forecast_range_local(t1, t2, self.var_model, ts_no, num_models, use_imputed=use_imputed)
+        
         else:
             # Both mean and variance will be forecasted and imputed
             predictions1 = self._get_imputation_range_local(t1, update_index - 1, self.ts_model, ts_no)
             predictions2 = self._get_forecast_range_local(update_index, t2, self.ts_model, ts_no, num_models)
             predictions = np.concatenate([predictions1, predictions2])
-            var1 = self._get_imputation_range_local(t1, update_index_var - 1, self.var_model, ts_no)
-            var2 = self._get_forecast_range_local(update_index_var, t2, self.var_model, ts_no, num_models,
+            if self.uq: 
+                var_index = max(t1, update_index_var )
+                var1 = self._get_imputation_range_local(t1, var_index - 1, self.var_model, ts_no)
+                var2 = self._get_forecast_range_local(var_index, t2, self.var_model, ts_no, num_models,
                                                   use_imputed=use_imputed)
-            var = np.concatenate([var1, var2])
+                var = np.concatenate([var1, var2])
 
-        if not self.direct_var:
+
+        if self.uq and not self.direct_var:
             var = var - np.square(predictions)
-        var = np.maximum(0, var)
         df = pd.DataFrame(
             index=index_ts_inv_mapper(self.start_time, self.agg_interval, np.arange(t1, t2 + 1).astype('float')))
         df['Mean Predictions'] = predictions
-
+        
+        if not self.uq: 
+            return df
+        
+        var = np.maximum(0, var)
+        
         if return_variance:
             df['Variance'] = var
             return df
