@@ -42,7 +42,7 @@ class SVDWrapper:
         b = self.N/self.M
         omega = 0.56*b**3-0.95*b**2+1.43+1.82*b
         thre = omega*np.median(self.s)
-        k = len(self.s[self.s>thre])
+        k = max(len(self.s[self.s>thre]), 1)
         # correct the dimensions of V
         self.V = self.V.T
         return k
