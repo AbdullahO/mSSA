@@ -205,6 +205,7 @@ class mSSA(object):
                 lag = None
 
         # Update mean model
+        print(obs.shape)
         self.ts_model.update_model(obs)
         self.k = self.ts_model.kSingularValuesToKeep
         # Determine updated models

@@ -49,7 +49,7 @@ class TSMM(object):
         self.persist_L = persist_L
         self.gamma = gamma
         self.models = {}
-        self.T0 = T0
+        self.T0 = T0 * self.no_ts
         self.TimeSeries = None
         self.TimeSeriesIndex = 0
         self.ReconIndex = 0
@@ -81,11 +81,10 @@ class TSMM(object):
 
         # Define update chunck for the update SVD function (Not really needed, should be resolved once the update function is fixed)
         if len(self.models) == 1 and NewEntries.size < self.T / 2:
-            UpdateChunk = 20 * int(np.sqrt(self.T0))//self.no_ts
+            UpdateChunk = 20 * max(int(np.sqrt(self.T0))//self.no_ts,1)
         else:
             UpdateChunk = int(self.T/(4*self.col_to_row_ratio))//self.no_ts
-  
-
+        
         # find if new models should be constructed
         N = NewEntries.size
         Rows = NewEntries.shape[0]
