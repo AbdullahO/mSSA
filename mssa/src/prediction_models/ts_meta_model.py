@@ -248,15 +248,23 @@ class TSMM(object):
         lenEntriesSinceCons = self.TimeSeriesIndex - self.ReconIndex
         ModelLength = Model.N * Model.M + Model.start
         TSlength = self.TimeSeriesIndex - Model.start
+        TSeries = self.TimeSeries[-TSlength//self.no_ts:,:]
+            
         if (TSlength <= self.TimeSeries.size and (float(lenEntriesSinceCons) / (self.ReconIndex - Model.start) >= self.gamma)) or (self.TimeSeriesIndex % (self.T / 2) == 0):  # condition to recompute SVD
             if self.persist_L: N = self.L
-            else: N = int(np.sqrt(TSlength/self.col_to_row_ratio))
+            else: 
+                N = int(np.sqrt(TSlength/self.col_to_row_ratio))
+                if N >  TSeries.shape[0]:
+                    N = TSeries.shape[0]
             M = int(TSlength / N)
-            if M % self.no_ts != 0:
+            
+            if M < self.no_ts:
+                raise Exception ('Number of columns in the matrix (%s) is less than the number of time series (%s)' % (M, self.no_ts))
+            
+            if M%self.no_ts != 0:
                 M -= M%self.no_ts
 
             M_ts = M//self.no_ts
-            TSeries = self.TimeSeries[-TSlength//self.no_ts:,:]
             TSeries = TSeries[:(N * M)//self.no_ts,:]
             if self.normalize:
                 scaler = StandardScaler()
