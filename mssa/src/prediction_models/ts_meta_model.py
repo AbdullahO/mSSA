@@ -11,9 +11,9 @@ class TSMM(object):
     # gamma:                    (float) (0,1) fraction of T after which the model is updated
     # col_to_row_ratio:         (int) the ration of no. columns to the number of rows in each sub-model
 
-    def __init__(self, kSingularValuesToKeep=None, T=int(1e5), gamma=0.2, T0=1000, col_to_row_ratio=1, SSVT=False, p=None, L=None, persist_L = False, no_ts = 1, normalize = True, fill_in_missing = True):
+    def __init__(self, kSingularValuesToKeep=None, T=int(10e7), gamma=0.2, T0=1000, col_to_row_ratio=1, SSVT=False, p=None, L=None, persist_L = False, no_ts = 1, normalize = True, fill_in_missing = True, threshold = None):
         self.kSingularValuesToKeep = kSingularValuesToKeep
-        
+        self.threshold = threshold
         self.no_ts = no_ts
         self.col_to_row_ratio = col_to_row_ratio
         self.fill_in_missing = fill_in_missing 
@@ -30,6 +30,7 @@ class TSMM(object):
             M = int(T/L)
             self.T = int(self.L*M)
             self.col_to_row_ratio = M/L
+            persist_L = True
         
         if M % (2*self.no_ts) != 0:
             M = M + (2*self.no_ts -M %(2*self.no_ts))
@@ -182,7 +183,8 @@ class TSMM(object):
         # Do not fit very few observations
         if self.TimeSeriesIndex < self.T0:
             return
-        if np.sqrt(self.TimeSeriesIndex/self.col_to_row_ratio) < 2:
+        if np.sqrt(self.TimeSeriesIndex/self.col_to_row_ratio) < 2 and self.TimeSeriesIndex/self.L <2 :
+            print('number of observations is less than number of rows: %s and %s'%(self.L,np.sqrt(self.TimeSeriesIndex/self.col_to_row_ratio)))
             return
         # Do not fit a lot of observations
         if lenEntriesSinceLastUpdate > self.T and ModelIndex != 0:
@@ -207,9 +209,9 @@ class TSMM(object):
                 start = 0
 
             if self.persist_L: N = self.L
-            else: 
-                N = int(np.sqrt(initEntries.size / (self.col_to_row_ratio)))
-                if N >  initEntries.shape[0]:
+            else:   N = int(np.sqrt(initEntries.size / (self.col_to_row_ratio)))
+            
+            if N >  initEntries.shape[0]:
                     N = initEntries.shape[0]
             M = int(initEntries.size / N)
             if M < self.no_ts:
@@ -232,7 +234,7 @@ class TSMM(object):
                 norm_std = np.ones(self.no_ts)
 
             self.models[ModelIndex] = SVDModel('t1', self.kSingularValuesToKeep, N, M, start=int(start), SSVT=self.SSVT,
-                                               probObservation=self.p, no_ts = self.no_ts, norm_mean = norm_means, norm_std = norm_std, fill_in_missing = self.fill_in_missing)
+                                               probObservation=self.p, no_ts = self.no_ts, norm_mean = norm_means, norm_std = norm_std, fill_in_missing = self.fill_in_missing, threshold = self.threshold)
             flattened_obs = inc_obs.reshape([N,M], order = 'F')
             flattened_obs = flattened_obs[:,np.arange(M_ts*self.no_ts).reshape([self.no_ts,M_ts]).flatten('F')]
             self.models[ModelIndex].fit(pd.DataFrame(data={'t1': flattened_obs.flatten('F')}))
@@ -281,7 +283,7 @@ class TSMM(object):
             self.models[ModelIndex] = SVDModel('t1', self.kSingularValuesToKeep, N, M, start= int(Model.start),
                                                TimesReconstructed=Model.TimesReconstructed + 1,
                                                TimesUpdated=Model.TimesUpdated, SSVT=self.SSVT, probObservation=self.p, 
-                                               no_ts = self.no_ts, norm_mean = norm_means, norm_std = norm_std, fill_in_missing = self.fill_in_missing)
+                                               no_ts = self.no_ts, norm_mean = norm_means, norm_std = norm_std, fill_in_missing = self.fill_in_missing,threshold = self.threshold)
             
             self.models[ModelIndex].fit(pd.DataFrame(data={'t1': flattened_obs.flatten('F')}))
             self.ReconIndex = N * M + Model.start
@@ -304,7 +306,6 @@ class TSMM(object):
                 D = flattened_obs.flatten('F')
                 # p = int(len(D) / N)
                 # D = D[:N * p]
-                print(D.shape)
                 Model.updateSVD(D, 'UP')
                 self.MUpdateIndex = Model.N * Model.M + Model.start
                 Model.updated = True

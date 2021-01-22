@@ -25,7 +25,7 @@ class SVDModel(object):
     #                               the latest data-points for prediction
     def __init__(self, seriesToPredictKey, kSingularValuesToKeep, N, M,updated = True, probObservation=1.0, svdMethod='numpy', otherSeriesKeysArray=[],\
      includePastDataOnly=True, start = 0, TimesUpdated = 0, TimesReconstructed =0, SSVT = False , no_ts = 1, forecast_model_score = None,forecast_model_score_test = None,\
-      imputation_model_score = None, norm_mean = [], norm_std = [], fill_in_missing = True):
+      imputation_model_score = None, norm_mean = [], norm_std = [], fill_in_missing = True, threshold = None):
 
         self.seriesToPredictKey = seriesToPredictKey
         self.otherSeriesKeysArray = otherSeriesKeysArray
@@ -75,6 +75,7 @@ class SVDModel(object):
         assert len(self.forecast_model_score_test) == no_ts 
         assert len(self.norm_std) == no_ts 
         assert len(self.norm_mean) == no_ts 
+        self.threshold = threshold
 
     # run a least-squares regression of the last row of self.matrix and all other rows of self.matrix
     # sets and returns the weights
@@ -122,7 +123,7 @@ class SVDModel(object):
         newMatrixPInv = tsUtils.pInverseMatrixFromSVD(self.skw, self.Ukw, self.Vkw,soft_threshold=soft_threshold, probability = self.p)
         self.weights = np.dot(newMatrixPInv.T, self.lastRowObservations)
         
-        # only compute r2 score if there are enoguh samples
+        # only compute r2 score if there are enough samples
         if len(self.lastRowObservations) >= 2*self.no_ts:
             for i in range(self.no_ts):
                 self.forecast_model_score[i] = r2_score(self.lastRowObservations[i::self.no_ts]/self.p, np.dot(matrix[:,i::self.no_ts].T,self.weights))
@@ -213,7 +214,7 @@ class SVDModel(object):
         obs = self.matrix.flatten('F')
         obs_matrix = self.matrix.copy()
         # now produce a thresholdedthresholded/de-noised matrix. this will over-write the original data matrix
-        svdMod = SVD(self.matrix, method='numpy')
+        svdMod = SVD(self.matrix, method='numpy', threshold = self.threshold)
         (self.sk, self.Uk, self.Vk) = svdMod.reconstructMatrix(self.kSingularValues, returnMatrix=False)
         if self.kSingularValues is None:
             self.kSingularValues= len(self.sk)

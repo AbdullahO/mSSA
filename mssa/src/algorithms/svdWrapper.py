@@ -8,7 +8,7 @@ from mssa.src import tsUtils
 
 class SVDWrapper:
 
-    def __init__(self, matrix, method='numpy', threshold = 0.90):
+    def __init__(self, matrix, method='numpy', threshold = None):
         if (type(matrix) != np.ndarray):
             raise Exception('SVDWrapper required matrix to be of type np.ndarray')
 
@@ -36,13 +36,16 @@ class SVDWrapper:
         # default is numpy's linear algebra library
         (self.U, self.s, self.V) = np.linalg.svd(self.matrix, full_matrices=False)
         
-        # S = np.cumsum(self.s**2)
-        # S = S/S[-1]
-        # k = np.argmax(S>self.threshold)+1
-        b = self.N/self.M
-        omega = 0.56*b**3-0.95*b**2+1.43+1.82*b
-        thre = omega*np.median(self.s)
-        k = max(len(self.s[self.s>thre]), 1)
+        if self.threshold is not None:
+            S = np.cumsum(self.s**2)
+            S = S/S[-1]
+            k = np.argmax(S>self.threshold)+1
+        
+        else: # do Donoho
+            b = self.N/self.M
+            omega = 0.56*b**3-0.95*b**2+1.43+1.82*b
+            thre = omega*np.median(self.s)
+            k = max(len(self.s[self.s>thre]), 1)
         # correct the dimensions of V
         self.V = self.V.T
         return k

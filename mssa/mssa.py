@@ -42,7 +42,7 @@ class mSSA(object):
 
     def __init__(self, rank=None, rank_var=1, T=int(2.5e7), T_var=None, gamma=0.2, T0=10, col_to_row_ratio=5,
                  agg_method='average', uncertainty_quantification=True, p=None, direct_var=True, L=None,
-                 persist_L=None, normalize=True, fill_in_missing=False, segment=False, agg_interval=None):
+                 persist_L=None, normalize=True, fill_in_missing=False, segment=False, agg_interval=None, threshold = None):
 
         # Checks
         if gamma < 0 or gamma >= 1:
@@ -95,10 +95,10 @@ class mSSA(object):
         self.direct_var = direct_var
         self.fill_in_missing = fill_in_missing
         self.segment = segment
-        
+        self.threshold = threshold
 
         ############ Edit #############
-        # Probably this number is large enough :), but might want to do it properly
+        # Probably this number is large enough :), but should do it properly
         ###############################
         if not self.segment:
             self.T = int(1e150)
@@ -172,11 +172,10 @@ class mSSA(object):
             self.column_names = list(df.columns)
             self.ts_model = TSMM(self.k, self.T, self.gamma, self.T0, col_to_row_ratio=self.col_to_row_ratio,
                                  SSVT=self.SSVT, p=self.p, L=self.L, persist_L=self.persist_L,
-                                 no_ts=self.no_ts, normalize=self.normalize, fill_in_missing=self.fill_in_missing)
+                                 no_ts=self.no_ts, normalize=self.normalize, fill_in_missing=self.fill_in_missing, threshold = self.threshold)
             self.var_model = TSMM(self.k_var, self.T_var, self.gamma, self.T0, col_to_row_ratio=self.col_to_row_ratio,
-                                  SSVT=self.SSVT, p=self.p,
-                                  L=self.L, persist_L=self.persist_L, no_ts=self.no_ts, normalize=self.normalize,
-                                  fill_in_missing=self.fill_in_missing)
+                                  SSVT=self.SSVT, p=self.p, L=self.L, persist_L=self.persist_L, 
+                                  no_ts=self.no_ts, normalize=self.normalize, fill_in_missing=self.fill_in_missing, threshold = self.threshold)
 
             if self.agg_interval is None:  self.agg_interval = self._get_time_difference(df.index)
 
@@ -205,7 +204,6 @@ class mSSA(object):
                 lag = None
 
         # Update mean model
-        print(obs.shape)
         self.ts_model.update_model(obs)
         self.k = self.ts_model.kSingularValuesToKeep
         # Determine updated models
