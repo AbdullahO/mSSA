@@ -51,6 +51,8 @@ prediction = model.predict('ts', 100001,100100)
 
 will forecast the entries between 100001 to 100100.
 
+
+## API
 Refer to the documentation of the mSSA class in [here](API.md). 
 
 ## Example
