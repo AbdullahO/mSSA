@@ -290,11 +290,13 @@ class mSSA(object):
                 var = self._get_imputation_range_local(t1, t2, self.var_model, ts_no)
             elif self.uq:
                 # impute and forecast variance
-                var1 = self._get_imputation_range_local(t1, update_index_var, self.var_model, ts_no)
-                var2 = self._get_forecast_range_local(update_index_var, t2, self.var_model, ts_no,
-                                                      use_imputed=use_imputed)
+                t1_ = max(update_index_var, t1)
+                var1 = self._get_imputation_range_local(t1, update_index_var-1, self.var_model, ts_no)
+                var2 = self._get_forecast_range_local(t1_, t2, self.var_model, ts_no, use_imputed=use_imputed)
                 var = np.concatenate([var1, var2])
-            else: var = 0
+                
+            else: 
+                var = 0
         
         elif t1 > update_index:
             # all variance and mean should be forecasted
