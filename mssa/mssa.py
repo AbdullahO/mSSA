@@ -18,7 +18,7 @@ from mssa.src.tsUtils import unnormalize
 
 
 class mSSA(object):
-    '''
+    """
     :param rank: (int) the number of singular values to retain in the means prediction model
     :param rank_var: (int) the number of singular values to retain in the variance prediction model
     :param gamma: (float) (0,1) fraction of T after which the last sub-model is fully updated
@@ -38,30 +38,48 @@ class mSSA(object):
     :param normalize: (bool) Normalize the multiple time series before fitting the model.
     :param fill_in_missing: if true, missing values will be filled by carrying the last observations forward, and then
      carrying the latest observation backward.
-    '''
+    """
 
-    def __init__(self, rank=None, rank_var=1, T=int(2.5e7), T_var=None, gamma=0.2, T0=10, col_to_row_ratio=5,
-                 agg_method='average', uncertainty_quantification=True, p=None, direct_var=True, L=None,
-                 persist_L=None, normalize=True, fill_in_missing=False, segment=False, agg_interval=None, threshold = None):
+    def __init__(
+        self,
+        rank=None,
+        rank_var=1,
+        T=int(2.5e7),
+        T_var=None,
+        gamma=0.2,
+        T0=10,
+        col_to_row_ratio=5,
+        agg_method="average",
+        uncertainty_quantification=True,
+        p=None,
+        direct_var=True,
+        L=None,
+        persist_L=None,
+        normalize=True,
+        fill_in_missing=False,
+        segment=False,
+        agg_interval=None,
+        threshold=None,
+    ):
 
         # Checks
         if gamma < 0 or gamma >= 1:
-            raise ValueError('gamma must be in the range (0,1]')
+            raise ValueError("gamma must be in the range (0,1]")
         if rank is not None:
-            if (rank < 1):
-                raise ValueError('rank must be > 0')
+            if rank < 1:
+                raise ValueError("rank must be > 0")
         if rank_var is not None:
-            if (rank_var < 1):
-                raise ValueError('rank_var must be > 0')
+            if rank_var < 1:
+                raise ValueError("rank_var must be > 0")
 
         if col_to_row_ratio < 1:
-            raise ValueError('col_to_row_ratio must be > 0')
+            raise ValueError("col_to_row_ratio must be > 0")
 
         if T < T0:
-            raise ValueError('T must be greater than T0')
+            raise ValueError("T must be greater than T0")
         if L is not None:
             if T < L:
-                raise ValueError('T must be greater than L')
+                raise ValueError("T must be greater than L")
 
         self.k = rank
         self.p = p
@@ -118,7 +136,7 @@ class mSSA(object):
     def _get_time_difference(self, time_stamps):
         """
         get the median time difference  in seconds between consecutive observations
-        :param time_stamps: time column of the time series dataframe from which we calculate the median difference  
+        :param time_stamps: time column of the time series dataframe from which we calculate the median difference
         """
         if isinstance(time_stamps[0], (int, np.integer)):
             return np.median(np.diff(time_stamps.values))
@@ -129,25 +147,34 @@ class mSSA(object):
     def _aggregate_df(self, df):
         """
         aggregate the dataframe by to its time columns according to agg_interval and agg_method
-        :param df: dataframe to be aggregated 
+        :param df: dataframe to be aggregated
         """
 
         # filter previously recorded timestamp
         if isinstance(df.index[0], datetime):
-            agg_op = df.groupby(pd.Grouper(freq='%sS' % self.agg_interval, sort=True, closed='right', label='right'))
+            agg_op = df.groupby(
+                pd.Grouper(
+                    freq="%sS" % self.agg_interval,
+                    sort=True,
+                    closed="right",
+                    label="right",
+                )
+            )
         elif isinstance(df.index[0], (int, np.integer)):
             agg_op = df.groupby((df.index // self.agg_interval).astype(int))
         else:
-            raise ValueError('Dataframe index must be integers or timestamps')
+            raise ValueError("Dataframe index must be integers or timestamps")
 
-        if self.agg_method == 'average':
+        if self.agg_method == "average":
             df_agg = agg_op.mean()
-        elif self.agg_method == 'min':
+        elif self.agg_method == "min":
             df_agg = agg_op.min()
-        elif self.agg_method == 'max':
+        elif self.agg_method == "max":
             df_agg = agg_op.max()
         else:
-            raise ValueError("Aggregation method %s is not recognized" % self.agg_method)
+            raise ValueError(
+                "Aggregation method %s is not recognized" % self.agg_method
+            )
         if self.fitted:
             return df_agg.loc[df_agg.index > self.current_timestamp]
         else:
@@ -162,42 +189,76 @@ class mSSA(object):
         """
         # check that there is a time columns
         if not (df.index.is_unique):
-            raise ValueError("The input dataframe must have an index with unique values")
-        if not (isinstance(df.index[0], (int, np.integer))) and not (isinstance(df.index[0], datetime)):
+            raise ValueError(
+                "The input dataframe must have an index with unique values"
+            )
+        if not (isinstance(df.index[0], (int, np.integer))) and not (
+            isinstance(df.index[0], datetime)
+        ):
             raise ValueError("Dataframe index must be integers or timestamps")
 
             # If this is the first time the model is being fit, determine important parameters.
         if not self.fitted:
             self.no_ts = len(df.columns)
             self.column_names = list(df.columns)
-            self.ts_model = TSMM(self.k, self.T, self.gamma, self.T0, col_to_row_ratio=self.col_to_row_ratio,
-                                 SSVT=self.SSVT, p=self.p, L=self.L, persist_L=self.persist_L,
-                                 no_ts=self.no_ts, normalize=self.normalize, fill_in_missing=self.fill_in_missing, threshold = self.threshold)
-            self.var_model = TSMM(self.k_var, self.T_var, self.gamma, self.T0, col_to_row_ratio=self.col_to_row_ratio,
-                                  SSVT=self.SSVT, p=self.p, L=self.L, persist_L=self.persist_L, 
-                                  no_ts=self.no_ts, normalize=self.normalize, fill_in_missing=self.fill_in_missing, threshold = self.threshold)
+            self.ts_model = TSMM(
+                self.k,
+                self.T,
+                self.gamma,
+                self.T0,
+                col_to_row_ratio=self.col_to_row_ratio,
+                SSVT=self.SSVT,
+                p=self.p,
+                L=self.L,
+                persist_L=self.persist_L,
+                no_ts=self.no_ts,
+                normalize=self.normalize,
+                fill_in_missing=self.fill_in_missing,
+                threshold=self.threshold,
+            )
+            self.var_model = TSMM(
+                self.k_var,
+                self.T_var,
+                self.gamma,
+                self.T0,
+                col_to_row_ratio=self.col_to_row_ratio,
+                SSVT=self.SSVT,
+                p=self.p,
+                L=self.L,
+                persist_L=self.persist_L,
+                no_ts=self.no_ts,
+                normalize=self.normalize,
+                fill_in_missing=self.fill_in_missing,
+                threshold=self.threshold,
+            )
 
-            if self.agg_interval is None:  self.agg_interval = self._get_time_difference(df.index)
+            if self.agg_interval is None:
+                self.agg_interval = self._get_time_difference(df.index)
 
             if self.segment:
                 self.T = self.ts_model.T
                 self.T_var = self.var_model.T
         else:
             if self.column_names != list(df.columns):
-                raise ValueError('The Dataframe must have the same columns as the original Dataframe')
+                raise ValueError(
+                    "The Dataframe must have the same columns as the original Dataframe"
+                )
 
         df = self._aggregate_df(df)
 
-        obs = (df.values).astype('float')
+        obs = (df.values).astype("float")
         # if obs.shape[0] < self.no_ts:
         #     print("Dataframe does not have enough new unseen entries. (Number of new timestamps should be =>  "
         #           "(number of time series)")
-            # return
+        # return
 
-        # lag is the the slack between the variance and timeseries model        
+        # lag is the the slack between the variance and timeseries model
         lag = None
         if self.ts_model.TimeSeries is not None:
-            lag = (self.ts_model.TimeSeriesIndex // self.no_ts - self.var_model.TimeSeriesIndex // self.no_ts)
+            lag = (
+                self.ts_model.TimeSeriesIndex // self.no_ts
+                - self.var_model.TimeSeriesIndex // self.no_ts
+            )
             if lag > 0:
                 lagged_obs = self.ts_model.TimeSeries[-lag:, :]
             else:
@@ -208,18 +269,26 @@ class mSSA(object):
         self.k = self.ts_model.kSingularValuesToKeep
         # Determine updated models
 
-        models = {k: self.ts_model.models[k] for k in self.ts_model.models if self.ts_model.models[k].updated}
+        models = {
+            k: self.ts_model.models[k]
+            for k in self.ts_model.models
+            if self.ts_model.models[k].updated
+        }
 
         if self.uq:
             if self.direct_var:
 
                 means = self.ts_model._denoiseTS(models)[
-                        self.var_model.TimeSeriesIndex // self.no_ts:self.ts_model.MUpdateIndex // self.no_ts, :]
+                    self.var_model.TimeSeriesIndex
+                    // self.no_ts : self.ts_model.MUpdateIndex
+                    // self.no_ts,
+                    :,
+                ]
                 if lag is not None:
                     var_obs = np.concatenate([lagged_obs, obs])
                 else:
                     var_obs = obs
-                var_entries = np.square(var_obs[:len(means), :] - means)
+                var_entries = np.square(var_obs[: len(means), :] - means)
                 self.var_model.update_model(var_entries)
             else:
                 var_entries = np.square(df.values)
@@ -228,9 +297,19 @@ class mSSA(object):
         self.current_timestamp = df.index[-1]
         self.fitted = True
 
-    def predict(self, col_name, t1, t2=None, num_models=10, confidence_interval=True, use_imputed=False,
-                return_variance=False, confidence=95, uq_method='Gaussian'):
-        '''
+    def predict(
+        self,
+        col_name,
+        t1,
+        t2=None,
+        num_models=10,
+        confidence_interval=True,
+        use_imputed=False,
+        return_variance=False,
+        confidence=95,
+        uq_method="Gaussian",
+    ):
+        """
         Predict 'col_name' at time t1 to time t2.
         :param col_name: name of the column to be predicted. It must one of the columns in the original  DF used for
         training.
@@ -244,16 +323,26 @@ class mSSA(object):
         :param uq_method: (string): Choose from  {"Gaussian" ,"Chebyshev"}
         :return:
             DataFrame with the timestamp and predictions
-        '''
-        # convert t1 and t2 to model index 
+        """
+        if len(self.ts_model.models) == 0:
+            raise Exception(
+                "The model has not been trained yet. Make sure you run `update_model` before predict. If you had run update_model, check for any warnings there."
+            )
+
+        # convert t1 and t2 to model index
         if t2 is None:
             t2 = t1
 
         if type(t1) != type(t2):
             raise ValueError("Start and end time should have the same type ")
 
-        if (not isinstance(t1, (str, pd.Timestamp)) and isinstance(self.start_time, (pd.Timestamp))) or (
-                isinstance(self.start_time, (int, np.integer)) and not isinstance(t1, (int, np.integer))):
+        if (
+            not isinstance(t1, (str, pd.Timestamp))
+            and isinstance(self.start_time, (pd.Timestamp))
+        ) or (
+            isinstance(self.start_time, (int, np.integer))
+            and not isinstance(t1, (int, np.integer))
+        ):
             if isinstance(self.start_time, (pd.Timestamp)):
                 raise ValueError("The time value should be a valid timestamp ")
             else:
@@ -269,8 +358,10 @@ class mSSA(object):
         t2 = max(t2, 0)
         # check that column is in dataframe
         if not (col_name in self.column_names):
-            raise ValueError('Column %s does not exist in the time series dataframe. Choose from %s ' % (
-                col_name, self.column_names))
+            raise ValueError(
+                "Column %s does not exist in the time series dataframe. Choose from %s "
+                % (col_name, self.column_names)
+            )
 
         ts_no = self.column_names.index(col_name)
 
@@ -284,88 +375,121 @@ class mSSA(object):
         if t2 < update_index:
             # mean is imputed
             predictions = self._get_imputation_range_local(t1, t2, self.ts_model, ts_no)
-            # variance 
+            # variance
             if self.uq and t2 < update_index_var:
                 # impute variance
                 var = self._get_imputation_range_local(t1, t2, self.var_model, ts_no)
             elif self.uq:
                 # impute and forecast variance
                 t1_ = max(update_index_var, t1)
-                var1 = self._get_imputation_range_local(t1, update_index_var-1, self.var_model, ts_no)
-                var2 = self._get_forecast_range_local(t1_, t2, self.var_model, ts_no, use_imputed=use_imputed)
-                var = np.concatenate([var1, var2])
-                
-            else: 
-                var = 0
-        
-        elif t1 > update_index:
-            # all variance and mean should be forecasted
-            predictions = self._get_forecast_range_local(t1, t2, self.ts_model, ts_no, num_models)
-            if self.uq: var = self._get_forecast_range_local(t1, t2, self.var_model, ts_no, num_models, use_imputed=use_imputed)
-        
-        else:
-            # Both mean and variance will be forecasted and imputed
-            predictions1 = self._get_imputation_range_local(t1, update_index - 1, self.ts_model, ts_no)
-            predictions2 = self._get_forecast_range_local(update_index, t2, self.ts_model, ts_no, num_models)
-            predictions = np.concatenate([predictions1, predictions2])
-            if self.uq: 
-                var_index = max(t1, update_index_var )
-                var1 = self._get_imputation_range_local(t1, var_index - 1, self.var_model, ts_no)
-                var2 = self._get_forecast_range_local(var_index, t2, self.var_model, ts_no, num_models,
-                                                  use_imputed=use_imputed)
+                var1 = self._get_imputation_range_local(
+                    t1, update_index_var - 1, self.var_model, ts_no
+                )
+                var2 = self._get_forecast_range_local(
+                    t1_, t2, self.var_model, ts_no, use_imputed=use_imputed
+                )
                 var = np.concatenate([var1, var2])
 
+            else:
+                var = 0
+
+        elif t1 > update_index:
+            # all variance and mean should be forecasted
+            predictions = self._get_forecast_range_local(
+                t1, t2, self.ts_model, ts_no, num_models
+            )
+            if self.uq:
+                var = self._get_forecast_range_local(
+                    t1, t2, self.var_model, ts_no, num_models, use_imputed=use_imputed
+                )
+
+        else:
+            # Both mean and variance will be forecasted and imputed
+            predictions1 = self._get_imputation_range_local(
+                t1, update_index - 1, self.ts_model, ts_no
+            )
+            predictions2 = self._get_forecast_range_local(
+                update_index, t2, self.ts_model, ts_no, num_models
+            )
+            predictions = np.concatenate([predictions1, predictions2])
+            if self.uq:
+                var_index = max(t1, update_index_var)
+                var1 = self._get_imputation_range_local(
+                    t1, var_index - 1, self.var_model, ts_no
+                )
+                var2 = self._get_forecast_range_local(
+                    var_index,
+                    t2,
+                    self.var_model,
+                    ts_no,
+                    num_models,
+                    use_imputed=use_imputed,
+                )
+                var = np.concatenate([var1, var2])
 
         if self.uq and not self.direct_var:
             var = var - np.square(predictions)
         df = pd.DataFrame(
-            index=index_ts_inv_mapper(self.start_time, self.agg_interval, np.arange(t1, t2 + 1).astype('float')))
-        df['Mean Predictions'] = predictions
-        
-        if not self.uq: 
+            index=index_ts_inv_mapper(
+                self.start_time,
+                self.agg_interval,
+                np.arange(t1, t2 + 1).astype("float"),
+            )
+        )
+        df["Mean Predictions"] = predictions
+
+        if not self.uq:
             return df
-        
+
         var = np.maximum(0, var)
-        
+
         if return_variance:
-            df['Variance'] = var
+            df["Variance"] = var
             return df
 
         #### Confidence Interval ########
         if confidence_interval:
-            lb, ub = self._get_prediction_bounds(predictions, var, c=confidence, uq_method=uq_method)
-            df['Lower Bound'] = lb
-            df['Upper Bound'] = ub
+            lb, ub = self._get_prediction_bounds(
+                predictions, var, c=confidence, uq_method=uq_method
+            )
+            df["Lower Bound"] = lb
+            df["Upper Bound"] = ub
 
             return df
 
         return df
 
-    def _get_prediction_bounds(self, predictions, var, c=95, uq_method='Gaussian'):
-        '''
+    def _get_prediction_bounds(self, predictions, var, c=95, uq_method="Gaussian"):
+        """
 
         :param predictions:
         :param var:
         :param c:
         :param uq_method:
         :return:
-        '''
+        """
         if c < 0 or c >= 100:
-            raise Exception('confidence interval c must be in the range (0,100): 0 <=c< 100')
+            raise Exception(
+                "confidence interval c must be in the range (0,100): 0 <=c< 100"
+            )
 
-        if uq_method == 'Chebyshev':
-            alpha = 1. / (np.sqrt(1 - c / 100))
-        elif uq_method == 'Gaussian':
+        if uq_method == "Chebyshev":
+            alpha = 1.0 / (np.sqrt(1 - c / 100))
+        elif uq_method == "Gaussian":
             alpha = norm.ppf(1 / 2 + c / 200)
         else:
-            raise Exception('uq_method option is not recognized,  available options are: "Gaussian" or "Chebyshev"')
+            raise Exception(
+                'uq_method option is not recognized,  available options are: "Gaussian" or "Chebyshev"'
+            )
 
         ci = alpha * np.sqrt(var)
 
         return predictions - ci, predictions + ci
 
-    def _get_forecast_range_local(self, t1, t2, model, ts_no, num_models=10, use_imputed=False):
-        '''
+    def _get_forecast_range_local(
+        self, t1, t2, model, ts_no, num_models=10, use_imputed=False
+    ):
+        """
 
         :param t1:
         :param t2:
@@ -374,7 +498,7 @@ class mSSA(object):
         :param num_models:
         :param use_imputed:
         :return:
-        '''
+        """
         no_ts = self.no_ts
         coeffs = model.models[0].weights
         no_coeff = len(coeffs)
@@ -385,9 +509,10 @@ class mSSA(object):
                 num_models = i
                 break
             coeffs_model = model.models[len(model.models) - 1 - i].weights
-            coeffs[-len(coeffs_model):] += coeffs_model
-            bias += (-model.models[len(model.models) - 1 - i].weights.sum() + 1) * \
-                    model.models[len(model.models) - 1 - i].norm_mean[ts_no]
+            coeffs[-len(coeffs_model) :] += coeffs_model
+            bias += (
+                -model.models[len(model.models) - 1 - i].weights.sum() + 1
+            ) * model.models[len(model.models) - 1 - i].norm_mean[ts_no]
             # coeffs_model = np.mean(np.array([m.weights for m in list(model.models.values())[-num_models-1:-1]]), 0)
         bias = bias / num_models
         coeffs = coeffs / (num_models)
@@ -396,7 +521,9 @@ class mSSA(object):
             t1_diff = t1 - t1_
             t1_diff *= t1_diff > 0
             output = np.zeros([t2 - t1_ + 1 + no_coeff])
-            output[:no_coeff] = self._get_imputation_range_local(t1_ - no_coeff, t1_ - 1, model, ts_no)
+            output[:no_coeff] = self._get_imputation_range_local(
+                t1_ - no_coeff, t1_ - 1, model, ts_no
+            )
         else:
             start_index_stored_ts = model.TimeSeriesIndex // no_ts - model.T // no_ts
             start_index_stored_ts = max(0, start_index_stored_ts)
@@ -405,26 +532,35 @@ class mSSA(object):
             t1_diff *= t1_diff > 0
             output = np.zeros([t2 - t1_ + 1 + no_coeff])
             last_observation_index = t1_ - start_index_stored_ts
-            output[:no_coeff] = model.TimeSeries[:, ts_no][last_observation_index - no_coeff:last_observation_index]
+            output[:no_coeff] = model.TimeSeries[:, ts_no][
+                last_observation_index - no_coeff : last_observation_index
+            ]
             if self.fill_in_missing:
-                output[:no_coeff]  =  pd.DataFrame(output[:no_coeff]).fillna(method='ffill').values[:,0]
-                output[:no_coeff] = pd.DataFrame(output[:no_coeff]).fillna(method='bfill').values[:,0]
+                output[:no_coeff] = (
+                    pd.DataFrame(output[:no_coeff]).fillna(method="ffill").values[:, 0]
+                )
+                output[:no_coeff] = (
+                    pd.DataFrame(output[:no_coeff]).fillna(method="bfill").values[:, 0]
+                )
             else:
-                output[:no_coeff] = pd.DataFrame(output[:no_coeff]).fillna(value=0).values[:,0]/model.p
+                output[:no_coeff] = (
+                    pd.DataFrame(output[:no_coeff]).fillna(value=0).values[:, 0]
+                    / model.p
+                )
         for i in range(0, t2 + 1 - t1_):
-            output[i + no_coeff] = np.dot(coeffs.T, output[i:i + no_coeff]) + bias
+            output[i + no_coeff] = np.dot(coeffs.T, output[i : i + no_coeff]) + bias
             # output[i + no_coeff] = sum([a[0]*b for a, b in zip(coeffs,output[i:i + no_coeff])])
-        return output[-(t2 - t1 + 1):]
+        return output[-(t2 - t1 + 1) :]
 
     def _get_imputation_range_local(self, t1, t2, model, ts_no):
-        '''
+        """
 
         :param t1:
         :param t2:
         :param model:
         :param ts_no:
         :return:
-        '''
+        """
         no_ts = self.no_ts
         T_ts = self.T // no_ts
         m1 = int(max((t1) / int(T_ts / 2) - 1, 0))
@@ -436,8 +572,12 @@ class mSSA(object):
         last_model = len(model.models) - 1
 
         # Get normalization constants
-        norm_mean = [(model.models[m].norm_mean) for m in range(m1, m2 + 1 + (m2 < last_model))]
-        norm_std = [(model.models[m].norm_std) for m in range(m1, m2 + 1 + (m2 < last_model))]
+        norm_mean = [
+            (model.models[m].norm_mean) for m in range(m1, m2 + 1 + (m2 < last_model))
+        ]
+        norm_std = [
+            (model.models[m].norm_std) for m in range(m1, m2 + 1 + (m2 < last_model))
+        ]
 
         # calculate tsrow and tscolumn
 
@@ -450,22 +590,31 @@ class mSSA(object):
         if m1 == m2:
             U1 = model.models[m1].Uk[:, :]
             S1 = model.models[m1].sk[:]
-            V1 = model.models[m1].Vk[ts_no::no_ts][tscol1:tscol2 + 1, :]
+            V1 = model.models[m1].Vk[ts_no::no_ts][tscol1 : tscol2 + 1, :]
             p1 = np.dot(U1 * S1[:], V1[:].T)
-            if (m1 < last_model - 1 and m1 != 0):
+            if m1 < last_model - 1 and m1 != 0:
                 S2 = model.models[m1 + 1].sk[:]
                 V2 = model.models[m1 + 1].Vk[ts_no::no_ts][
-                     tscol1 - int(M1 / (2 * no_ts)):tscol2 - int(M1 / (2 * no_ts)) + 1, :]
+                    tscol1 - int(M1 / (2 * no_ts)) : tscol2 - int(M1 / (2 * no_ts)) + 1,
+                    :,
+                ]
                 U2 = model.models[m1 + 1].Uk[:, :]
-                Result = 0.5 * unnormalize(p1.T.flatten()/model.p, norm_mean[0][ts_no], norm_std[0][ts_no])+ 0.5 * unnormalize(
-                    np.dot(U2 * S2[:], V2[:].T).T.flatten()/model.p, norm_mean[1][ts_no], norm_std[1][ts_no])
+                Result = 0.5 * unnormalize(
+                    p1.T.flatten() / model.p, norm_mean[0][ts_no], norm_std[0][ts_no]
+                ) + 0.5 * unnormalize(
+                    np.dot(U2 * S2[:], V2[:].T).T.flatten() / model.p,
+                    norm_mean[1][ts_no],
+                    norm_std[1][ts_no],
+                )
             else:
-                Result = unnormalize(p1.T.flatten()/model.p, norm_mean[0][ts_no], norm_std[0][ts_no])
+                Result = unnormalize(
+                    p1.T.flatten() / model.p, norm_mean[0][ts_no], norm_std[0][ts_no]
+                )
 
             end = -N2 + tsrow2 + 1
-            if end == 0: end = None
+            if end == 0:
+                end = None
             return Result[tsrow1:end]
-
 
         else:
 
@@ -481,7 +630,7 @@ class mSSA(object):
                     start = t1 - model.models[m].start // no_ts
                 elif m == m1 + 1:
                     start = t1 - model.models[m].start // no_ts
-                    start *= (start > 0)
+                    start *= start > 0
                 if m == m2:
                     end = t2 - model.models[m].start // no_ts
                 elif m == m2 + 1:
@@ -492,21 +641,31 @@ class mSSA(object):
                 tsrow_i = int(start % N)
                 tsrow_f = int(end % N)
                 tsrow_f = -N + tsrow_f + 1
-                if tsrow_f == 0: tsrow_f = None
+                if tsrow_f == 0:
+                    tsrow_f = None
                 i = -i_index + model.models[m].start // no_ts + tscol_i * N + tsrow_i
                 length = N * (tscol_f - tscol_i + 1) + int(tsrow_f or 0) - tsrow_i
                 U = model.models[m].Uk[:]
                 S = model.models[m].sk[:]
-                V = model.models[m].Vk[ts_no::no_ts][tscol_i:tscol_f + 1, :]
+                V = model.models[m].Vk[ts_no::no_ts][tscol_i : tscol_f + 1, :]
                 p = np.dot(U * S, V.T)
-                Result[i:i + length] += 0.5 * unnormalize(p.T.flatten()[tsrow_i:tsrow_f]/model.p, norm_mean[m - m1][ts_no],
-                                                          norm_std[m - m1][ts_no])
+                Result[i : i + length] += 0.5 * unnormalize(
+                    p.T.flatten()[tsrow_i:tsrow_f] / model.p,
+                    norm_mean[m - m1][ts_no],
+                    norm_std[m - m1][ts_no],
+                )
             fix_0_index = int(model.T / (2 * no_ts)) - i_index
-            fix_0_index *= (fix_0_index > 0)
-            fix_last_index = t2 - model.models[last_model].start // no_ts - int(model.T / (2 * no_ts)) + 1
-            fix_last_index *= (fix_last_index > 0)
+            fix_0_index *= fix_0_index > 0
+            fix_last_index = (
+                t2
+                - model.models[last_model].start // no_ts
+                - int(model.T / (2 * no_ts))
+                + 1
+            )
+            fix_last_index *= fix_last_index > 0
             Result[:fix_0_index] = 2 * Result[:fix_0_index]
 
-            if fix_last_index > 0: Result[-fix_last_index:] = 2 * Result[-fix_last_index:]
+            if fix_last_index > 0:
+                Result[-fix_last_index:] = 2 * Result[-fix_last_index:]
 
             return Result[:]
