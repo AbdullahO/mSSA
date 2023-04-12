@@ -3,6 +3,7 @@ import pandas as pd
 from mssa.src.prediction_models.ts_svd_model import SVDModel
 from math import ceil
 from sklearn.preprocessing import StandardScaler
+import warnings
 
 
 class TSMM(object):
@@ -60,7 +61,7 @@ class TSMM(object):
                 self.L = int(np.sqrt(self.T / self.col_to_row_ratio))
             else:
                 self.T = self.L * M
-            Warning(
+            warnings.warn(
                 "Number of columns has to be even and divisible by the number of time series thus col_to_row_ratio is changed to %s"
                 % (self.col_to_row_ratio)
             )
@@ -220,22 +221,16 @@ class TSMM(object):
         lenEntriesSinceLastUpdate = self.TimeSeriesIndex - self.MUpdateIndex
         # Do not fit very few observations
         if self.TimeSeriesIndex < self.T0:
-            print(
-                f"number of observations is \
-                  not sufficent to train the model with the current choice of \
-                  T0 ={self.T0}. decrease it at most\
-                   {self.TimeSeriesIndex}"
+            warnings.warn(
+                f"number of observations is not sufficient to train the model with the current choice of T0 ={self.T0//self.no_ts}. decrease it to at most {self.TimeSeriesIndex//self.no_ts}"
             )
             return
         if (
             np.sqrt(self.TimeSeriesIndex / self.col_to_row_ratio) < 2
             and self.TimeSeriesIndex / self.L < 2
         ):
-            print(
-                f"number of observations is \
-                  not sufficent to train the model with the current choice of \
-                  col_to_row_ratio ={self.col_to_row_ratio}. decrease it at most\
-                   {self.TimeSeriesIndex//4}"
+            warnings.warn(
+                f"number of observations is not sufficient to train the model with the current choice of  col_to_row_ratio ={self.col_to_row_ratio}. decrease it to at most {self.TimeSeriesIndex//4}"
             )
             return
         # Do not fit a lot of observations
@@ -513,11 +508,6 @@ class TSMM(object):
         # if index next predict
         # UsedModels = [a for a in models.values()[-NoModels:]]
         UsedModels = [models[i] for i in range(n - NoModels, n)]
-        if len(UsedModels) == 0:
-            raise Exception(
-                "The model has not been trained yet. Make sure you run `update_model` before predict,\
-                and check for any warnings there."
-            )
         if dataPoints is None and (index is None or index == self.TimeSeriesIndex + 1):
             TSDF = pd.DataFrame(data={"t1": self.TimeSeries[-self.L :]})
 
